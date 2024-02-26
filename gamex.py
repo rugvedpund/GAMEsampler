@@ -1,4 +1,5 @@
 from scipy import *
+import numpy as np
 import random
 import scipy.linalg as la
 
@@ -154,11 +155,8 @@ class Game:
             G=Gaussian(around,cov)    
             return G
 
-        breakpoint()
         icov=zeros((N,N))
         delta=self.sigreg/1000.0
-        print('getting cov around', around)
-        # N=len(par0)
         parsaround=zeros((N,N,4,N))
         for i in range(N):
             ei=zeros(N)
@@ -170,11 +168,11 @@ class Game:
                 parsaround[i,j,1,:] = around + delta*ei - delta*ej
                 parsaround[i,j,2,:] = around - delta*ei + delta*ej
                 parsaround[i,j,3,:] = around - delta*ei - delta*ej
-        parsaround=pararound.reshape(-1,N)
-        parsaround.append(around.reshape(1,N),axis=0)
-        print(parsaround.shape)
+                parsaround[j,i,:,:] = parsaround[i,j,:,:]
 
-        breakpoint()
+        # reshape to feed into like() 
+        parsaround = parsaround.reshape(-1,N)
+        parsaround = np.append(parsaround, around.reshape(-1,N), axis=0)
         parslike=self.like(parsaround)
 
         like0, parslike = parslike[-1], parslike[:-1] #extract the last one, and delete it from the array to enable reshaping
@@ -211,8 +209,7 @@ class Game:
 
         while True:
             print("Regularizing cholesky")
-            for i in range(N):
-                icov[i,i]+=1/self.sigreg[i]**2
+            icov+=np.diag(1/self.sigreg)**2
             try:
                 ch=la.cholesky(icov)
                 break
@@ -232,10 +229,19 @@ class Game:
         G=self.getcov(zeropar)
         G.like0=like0
         slist=[]
+        slisttemp=[]
+        parlist=[]
         ## now sample around this 
         for i in range(self.N1):
             par,glike=G.sample()
-            like=self.like(par)
+            parlist.append(par)
+            slisttemp.append([par,like0,glike])
+
+        parlikes=self.like(np.array(parlist))
+
+        for i in range(self.N1):
+            par,like0,glike=slisttemp[i]
+            like=parlikes[i]
             slist.append(Sample(par,like, like0, glike))
 
         return slist,G
