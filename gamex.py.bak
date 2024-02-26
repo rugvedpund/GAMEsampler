@@ -67,7 +67,7 @@ class Game:
             if (self.wemax<self.tweight):
                 done=True
             if (len(Gausses)==20):
-                print("Max iter exceeded")
+                print "Max iter exceeded"
                 done=True
             if (self.effsamp<self.mineffsamp):
                 done=False
@@ -111,7 +111,7 @@ class Game:
                     flist.append(sa)
                 
         self.sample_list=flist
-        print("#G=",len(Gausses), "maxlike=",maxlike,"wemax=",wemax,"effsamp=",effsamp)
+        print "#G=",len(Gausses), "maxlike=",maxlike,"wemax=",wemax,"effsamp=",effsamp
         self.effsamp=effsamp
         self.wemax=wemax
         return parmaxw
@@ -139,8 +139,8 @@ class Game:
                     worstwex=wex
                     todo=sa.pars
 
-        print("Pruning:", len(newbadlist),len(badlist))
-        print("New Todo:",todo)
+        print "Pruning:", len(newbadlist),len(badlist)
+        print "New Todo:",todo
         return newbadlist,todo
                         
     def getcov(self, around):
@@ -150,67 +150,37 @@ class Game:
             cov=zeros((N,N))
             for i in range(N):
                 cov[i,i]=self.sigreg[i]**2
-            print(cov)
+            print cov
             G=Gaussian(around,cov)    
             return G
 
-        breakpoint()
         icov=zeros((N,N))
         delta=self.sigreg/1000.0
-        print('getting cov around', around)
-        # N=len(par0)
-        parsaround=zeros((N,N,4,N))
+        like0=self.like(around)
         for i in range(N):
-            ei=zeros(N)
-            ei[i]=1.
-            for j in range(i,N):
-                ej=zeros(N)
-                ej[j]=1.
-                parsaround[i,j,0,:] = around + delta*ei + delta*ej
-                parsaround[i,j,1,:] = around + delta*ei - delta*ej
-                parsaround[i,j,2,:] = around - delta*ei + delta*ej
-                parsaround[i,j,3,:] = around - delta*ei - delta*ej
-        parsaround=pararound.reshape(-1,N)
-        parsaround.append(around.reshape(1,N),axis=0)
-        print(parsaround.shape)
-
-        breakpoint()
-        parslike=self.like(parsaround)
-
-        like0, parslike = parslike[-1], parslike[:-1] #extract the last one, and delete it from the array to enable reshaping
-        parslike=parslike.reshape((N,N,4))
-        for i in range(N):
-            for j in range(i,N):
-                der = (parslike[i,j,0] + parslike[i,j,3] - parslike[i,j,1] - parslike[i,j,2])/(4*delta[i]*delta[j])
-                if i==j: der*=4 #??????
+            parspi=around*1.0
+            parsmi=around*1.0
+            parspi[i]+=delta[i]
+            parsmi[i]-=delta[i]
+            for j in range(N):
+                if (i==j):
+                    der=(self.like(parspi)+self.like(parsmi)-2*like0)/(delta[i]**2)
+                else:
+                    parspp=parspi*1.0
+                    parspm=parspi*1.0
+                    parsmp=parsmi*1.0
+                    parsmm=parsmi*1.0
+                    parspp[j]+=delta[j]
+                    parspm[j]-=delta[j]
+                    parsmp[j]+=delta[j]
+                    parsmm[j]-=delta[j]
+                    #print parspp, parsmm, parsmp, parspm
+                    der=(self.like(parspp)+self.like(parsmm)-self.like(parspm)-self.like(parsmp))/(4*delta[i]*delta[j])
+                    #print der,self.like(parspp),self.like(parsmm),self.like(parspm),self.like(parsmp)
                 icov[i,j]=-der
                 icov[j,i]=-der
-        
-        #for i in range(N):
-        #    parspi=around*1.0
-        #    parsmi=around*1.0
-        #    parspi[i]+=delta[i]
-        #    parsmi[i]-=delta[i]
-        #    for j in range(N):
-        #        if (i==j):
-        #            der=(self.like(parspi)+self.like(parsmi)-2*like0)/(delta[i]**2)
-        #        else:
-        #            parspp=parspi*1.0
-        #            parspm=parspi*1.0
-        #            parsmp=parsmi*1.0
-        #            parsmm=parsmi*1.0
-        #            parspp[j]+=delta[j]
-        #            parspm[j]-=delta[j]
-        #            parsmp[j]+=delta[j]
-        #            parsmm[j]-=delta[j]
-        #            #print parspp, parsmm, parsmp, parspm
-        #            der=(self.like(parspp)+self.like(parsmm)-self.like(parspm)-self.like(parsmp))/(4*delta[i]*delta[j])
-        #            #print der,self.like(parspp),self.like(parsmm),self.like(parspm),self.like(parsmp)
-        #        icov[i,j]=-der
-        #        icov[j,i]=-der
-
         while True:
-            print("Regularizing cholesky")
+            print "Regularizing cholesky"
             for i in range(N):
                 icov[i,i]+=1/self.sigreg[i]**2
             try:
@@ -220,7 +190,7 @@ class Game:
                 pass
 
         cov=la.inv(icov)
-        print(cov)
+        print cov
         G=Gaussian(around,self.blow*cov)    
         return G
 
