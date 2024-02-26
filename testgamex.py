@@ -16,6 +16,28 @@ if sys.argv[1]=='gauss':
     sname='gauss.pdf'
     ga.run()
 
+if sys.argv[1]=='dblgauss':
+    def like(x):
+        import numpy as np
+        x=np.array(x)
+        c1=np.array([[3,0],
+                    [0,1]])
+        c2=c1
+        m1=np.array([-4,-4])
+        m2=np.array([4,4])
+        return -((x-m1)@c1@(x-m1).T + (x-m2)@c2@(x-m2).T)/2.0 #centered at 0,0,0 and m2
+    ga=Game(like,[0.5,0.0],[0.7,0.7])
+    ga.N1=1000
+    ga.tweight=1.50
+    ga.mineffsamp=5000
+    sname='dblgauss.pdf'
+    ga.run()
+    ga=Game(like,[0.5,0.0],[0.7,0.7])
+    ga.N1=1000
+    ga.tweight=1.50
+    ga.mineffsamp=5000
+    sname='dblgauss.pdf'
+    ga.run()
 
 elif sys.argv[1]=='ring':
     def like(x):
@@ -43,14 +65,14 @@ else:
 
 def plotel(G):
     cov=G.cov
-    print G.cov
+    print(G.cov)
     val,vec=linalg.eig(cov)
     vec=vec.T
 
     vec[0]*=sqrt(real(val[0]))
     vec[1]*=sqrt(real(val[1]))
-    print vec[0],'A'
-    print vec[1],'B'
+    print(vec[0],'A')
+    print(vec[1],'B')
     pylab.plot(G.mean[0],G.mean[1],'bo')
     pylab.plot([G.mean[0]-vec[0][0],G.mean[0]+vec[0][0]],
                [G.mean[1]-vec[0][1],G.mean[1]+vec[0][1]],'r-')
@@ -94,22 +116,22 @@ diffp=wsumsa-trvalsa
 vmax=trvalsa.max()*1.1
 
 pylab.subplot(2,2,1)
-pylab.imshow(sums, interpolation='nearest', origin='lower left',extent=[cmin,cmax,cmin,cmax])
+pylab.imshow(sums, interpolation='nearest', origin='lower',extent=[cmin,cmax,cmin,cmax])
 for G in ga.Gausses:
     plotel(G)
 pylab.xlim(cmin,cmax)
 pylab.ylim(cmin,cmax)
 
 pylab.subplot(2,2,2)
-pylab.imshow(wsumsa, interpolation='nearest', origin='lower left',extent=[cmin,cmax,cmin,cmax],vmin=0, vmax=vmax)
+pylab.imshow(wsumsa, interpolation='nearest', origin='lower',extent=[cmin,cmax,cmin,cmax],vmin=0, vmax=vmax)
 
 pylab.subplot(2,2,3)
-pylab.imshow(trvalsa, interpolation='nearest', origin='lower left',extent=[cmin,cmax,cmin,cmax],vmin=0, vmax=vmax)
+pylab.imshow(trvalsa, interpolation='nearest', origin='lower',extent=[cmin,cmax,cmin,cmax],vmin=0, vmax=vmax)
 
 
 
 pylab.subplot(2,2,4)
-pylab.imshow(diffp, interpolation='nearest', origin='lower left',extent=[cmin,cmax,cmin,cmax])
+pylab.imshow(diffp, interpolation='nearest', origin='lower',extent=[cmin,cmax,cmin,cmax])
 pylab.colorbar()
 
 
@@ -122,9 +144,9 @@ rr=xx**2+yy**2
 mr=(rr*ww).sum()/(ww.sum())
 vr=sqrt((rr**2*ww).sum()/(ww.sum())-mr*mr)
 
-print 'xmean,xvar=',mx,vx
-print 'ymean,yvar=',my,vy
-print 'rmean,rvar=',mr,vr
+print('xmean,xvar=',mx,vx)
+print('ymean,yvar=',my,vy)
+print('rmean,rvar=',mr,vr)
 
 
 pylab.savefig(sname)

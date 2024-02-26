@@ -5,6 +5,7 @@ import pylab, sys
 import scipy.linalg as linalg
 
 random.seed(100)
+
 def likemany(x):
     return list(map(like,x))
 

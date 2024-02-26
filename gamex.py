@@ -22,7 +22,7 @@ class Gaussian:
         da=array([random.gauss(0.,1.) for x in range(self.N)])
         glike = -(da**2).sum()/2.0-self.lndet/2.0
         sa=dot(da,self.chol)
-        if (self.mean!=None):
+        if (self.mean is not None):
             sa+=self.mean
         return sa,glike
     
@@ -67,7 +67,7 @@ class Game:
             if (self.wemax<self.tweight):
                 done=True
             if (len(Gausses)==20):
-                print "Max iter exceeded"
+                print("Max iter exceeded")
                 done=True
             if (self.effsamp<self.mineffsamp):
                 done=False
@@ -111,7 +111,7 @@ class Game:
                     flist.append(sa)
                 
         self.sample_list=flist
-        print "#G=",len(Gausses), "maxlike=",maxlike,"wemax=",wemax,"effsamp=",effsamp
+        print("#G=",len(Gausses), "maxlike=",maxlike,"wemax=",wemax,"effsamp=",effsamp)
         self.effsamp=effsamp
         self.wemax=wemax
         return parmaxw
@@ -139,8 +139,8 @@ class Game:
                     worstwex=wex
                     todo=sa.pars
 
-        print "Pruning:", len(newbadlist),len(badlist)
-        print "New Todo:",todo
+        print("Pruning:", len(newbadlist),len(badlist))
+        print("New Todo:",todo)
         return newbadlist,todo
                         
     def getcov(self, around):
@@ -150,7 +150,7 @@ class Game:
             cov=zeros((N,N))
             for i in range(N):
                 cov[i,i]=self.sigreg[i]**2
-            print cov
+            print(cov)
             G=Gaussian(around,cov)    
             return G
 
@@ -180,7 +180,7 @@ class Game:
                 icov[i,j]=-der
                 icov[j,i]=-der
         while True:
-            print "Regularizing cholesky"
+            print("Regularizing cholesky")
             for i in range(N):
                 icov[i,i]+=1/self.sigreg[i]**2
             try:
@@ -190,7 +190,7 @@ class Game:
                 pass
 
         cov=la.inv(icov)
-        print cov
+        print(cov)
         G=Gaussian(around,self.blow*cov)    
         return G
 
