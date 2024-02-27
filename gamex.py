@@ -67,7 +67,7 @@ class Game:
             
             if (self.wemax<self.tweight):
                 done=True
-            if (len(Gausses)==20):
+            if (len(Gausses)>20):
                 print("Max iter exceeded")
                 done=True
             if (self.effsamp<self.mineffsamp):
@@ -183,29 +183,6 @@ class Game:
                 if i==j: der*=4 #??????
                 icov[i,j]=-der
                 icov[j,i]=-der
-        
-        #for i in range(N):
-        #    parspi=around*1.0
-        #    parsmi=around*1.0
-        #    parspi[i]+=delta[i]
-        #    parsmi[i]-=delta[i]
-        #    for j in range(N):
-        #        if (i==j):
-        #            der=(self.like(parspi)+self.like(parsmi)-2*like0)/(delta[i]**2)
-        #        else:
-        #            parspp=parspi*1.0
-        #            parspm=parspi*1.0
-        #            parsmp=parsmi*1.0
-        #            parsmm=parsmi*1.0
-        #            parspp[j]+=delta[j]
-        #            parspm[j]-=delta[j]
-        #            parsmp[j]+=delta[j]
-        #            parsmm[j]-=delta[j]
-        #            #print parspp, parsmm, parsmp, parspm
-        #            der=(self.like(parspp)+self.like(parsmm)-self.like(parspm)-self.like(parsmp))/(4*delta[i]*delta[j])
-        #            #print der,self.like(parspp),self.like(parsmm),self.like(parspm),self.like(parsmp)
-        #        icov[i,j]=-der
-        #        icov[j,i]=-der
 
         while True:
             print("Regularizing cholesky")
@@ -219,14 +196,13 @@ class Game:
         cov=la.inv(icov)
         print(cov)
         G=Gaussian(around,self.blow*cov)    
-        return G
+        return G, like0
 
 
     def isample (self, zeropar):
-        like0=self.like(zeropar)
         
         ## Get local covariance matrix
-        G=self.getcov(zeropar)
+        G,like0=self.getcov(zeropar)
         G.like0=like0
         slist=[]
         slisttemp=[]
