@@ -268,15 +268,14 @@ class FlowAnalyzerV2(NormalizingFlow):
             else [int(p) for p in args.nPCA.split()]
         )
         if verbose:
-            print(f"using modes between {args.nPCA}")
+            pcadebug = "all" if args.nPCA == "" else args.nPCA
+            print(f"using PCA modes {pcadebug}")
         self.nPCAarr = np.hstack(
             [
                 np.arange(self.nPCA[0]),
                 np.arange(self.nPCA[1], self.nfreq * self.nsigmas),
             ]
         )
-        if verbose:
-            print(self.nPCAarr)
         self.data = np.delete(
             self.data, self.nPCAarr, axis=1
         )  # delete last nPCA columns

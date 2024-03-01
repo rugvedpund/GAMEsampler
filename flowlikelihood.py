@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import torch
 import corner
 import lusee
@@ -19,6 +20,7 @@ torch.set_default_tensor_type("torch.cuda.FloatTensor")
 ##---------------------------------------------------------------------------##
 # load model, fg and do all the PCA stuff for 2+4
 
+assert os.path.exists(model)
 flow = nf.FlowAnalyzerV2(loadPath=model)
 
 args = nf.Args()
