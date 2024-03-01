@@ -184,8 +184,8 @@ class Game:
                 icov[i,j]=-der
                 icov[j,i]=-der
 
+        print("Regularizing cholesky")
         while True:
-            print("Regularizing cholesky")
             icov+=np.diag(1/self.sigreg)**2
             try:
                 ch=la.cholesky(icov)
