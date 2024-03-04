@@ -22,9 +22,6 @@ if verbose:
 try:
     root = os.environ["NF_WORKDIR"]
 except:
-    print(
-        "NF module uses the environment variable $NF_WORKDIR to look for fg fits files, models, likelihoods, etc."
-    )
     root = os.path.abspath("./")
     print("Now using the current dir", root)
 
