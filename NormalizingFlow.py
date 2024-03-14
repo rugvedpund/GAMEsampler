@@ -39,7 +39,6 @@ class NormalizingFlow:
         except FileNotFoundError:
             if verbose:
                 print("no file found, need to train")
-        self.precompute_data_after = dict()
 
     def train(
         self,

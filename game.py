@@ -1,4 +1,5 @@
 from scipy import *
+import numpy as np
 import random
 import scipy.linalg as la
 
@@ -38,6 +39,7 @@ class Gaussian:
 
 class Game:
     def __init__ (self, likefuncmany, par0, sigreg=0.0):
+        print('Starting Game Sampler')
         random.seed(10)
         self.like=likefuncmany ## returns log like
         self.sigreg=array(sigreg)
@@ -58,7 +60,7 @@ class Game:
         self.Gausses=[]
         self.SamList=[]
         while not done:
-            sample_list, G=self.isample (toexplore)
+            sample_list, G=self.isample(toexplore)
             self.Gausses.append(G)
             self.SamList+=sample_list
 
@@ -110,14 +112,14 @@ class Game:
                 flist.append(sa)
                 
         self.sample_list=flist
-        print("#G=",len(Gausses), "maxlike=",maxlike,"wemax=",wemax,"effsamp=",effsamp)
+        print("#G=",len(Gausses),"around=",Gausses[-1].mean, "maxlike=",maxlike,"wemax=",wemax,"effsamp=",effsamp)
         self.effsamp=effsamp
         self.wemax=wemax
         return parmaxw
 
                         
     def getcov(self, around):
-        N=self.N
+        N=self.N # number of dimensions
 
         if (self.fixedcov):
             cov=zeros((N,N))
@@ -161,7 +163,7 @@ class Game:
                     toget.append(parspm)
                     toget.append(parsmp)
 
-        likes=self.like(toget)
+        likes=self.like(np.array(toget))
 
         # like0=likes.pop(0)
         like0=list(likes).pop(0)
