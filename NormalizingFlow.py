@@ -15,7 +15,7 @@ import corner
 verbose = True
 if verbose:
     print(
-        "This is a snapshot of the NormalizingFlow.py module on 01Mar2024 for testing GameSampler"
+        "This is a snapshot of the NormalizingFlow.py module on 22Mar2024 for testing GameSampler"
     )
 
 # specify path to save/load models and likelihood results
@@ -39,6 +39,7 @@ class NormalizingFlow:
         except FileNotFoundError:
             if verbose:
                 print("no file found, need to train")
+        print("--" * 40, "\n")
 
     def train(
         self,
@@ -64,8 +65,7 @@ class NormalizingFlow:
         if retrain:
             from sinf import GIS
 
-            if verbose:
-                print("retraining...")
+            print("retraining...")
             self.model = None
         self.model = GIS.GIS(
             self.train_data.clone(),
@@ -76,11 +76,9 @@ class NormalizingFlow:
             verbose=verbose,
         )
         self.nlayer = len(self.model.layer)
-        if verbose:
-            print("Total number of iterations: ", len(self.model.layer))
+        print("Total number of iterations: ", len(self.model.layer))
         torch.save(self.model, savePath)
-        if verbose:
-            print("model saved at", savePath)
+        print("model saved at", savePath)
 
     def _toTensor(self, nparray):
         return torch.from_numpy(nparray).float().to(self.device)
@@ -304,7 +302,7 @@ class FlowAnalyzerV2(NormalizingFlow):
         if verbose:
             print(f"{self.t21data.shape=} ready")
         if verbose:
-            print("ready to calculate likelihoods!")
+            print("ready to train/calculate likelihoods!")
 
     def proj_t21(self, t21_vs):
         include_noise = self.args.noisyT21
@@ -424,10 +422,31 @@ class FlowAnalyzerV2(NormalizingFlow):
         )
         return samples, loglikelihood
 
-    def get_likelihoodFromSamplesGAME(self, samples, cmb=False):
-        assert samples.shape == (samples.shape[0], 3)
-        _, loglikelihood = self.get_likelihoodFromSamples(samples, cmb=cmb)
+    def get_likelihoodFromSamplesGAME(
+        self, samples, cmb=False, priorlow=[0.01, 1, 1], priorhigh=[10, 40, 40]
+    ):
+        arr = np.array(samples)  # need this for game.py
+        assert arr.shape == (arr.shape[0], 3)
+
+        _, loglikelihood = self.get_likelihoodFromSamples(arr, cmb=cmb)
+
+        # apply prior
+        print("applying priors: low =", priorlow, ", high =", priorhigh)
+        abovelowidx = (arr > priorlow).all(axis=1)
+        belowhighidx = (arr < priorhigh).all(axis=1)
+        inprioridx = np.logical_and(abovelowidx, belowhighidx)
+        outprioridx = np.logical_not(inprioridx)
+        loglikelihood[outprioridx] = -1e9  # assign a super low loglikelihood
+
+        # apply loglikelihood blowupfactor
+        print("blowing up likelihoods by ", self.args.llblowupfactor)
+        loglikelihood /= self.args.llblowupfactor
+
         return loglikelihood
+
+    def get_likelihoodFromSampleEMCEE(self, sample):
+        arr = np.array(sample)[None, :]
+        return self.get_likelihoodFromSamplesGAME(arr)
 
     def getGainFluctuationMap(self):
         # does not work for chromatic maps
@@ -584,7 +603,9 @@ def get_t21vs1d(freqs, npoints, vs, cmb=False, cosmicdawn=False, **kwargs):
     return samples, t21_vs
 
 
-def get_fname(args, old=False):
+def get_fname(args):
+    if args.old:
+        print("using old model")
     """for saving model after training"""
     cS = ",".join(args.combineSigma.split())
     pca = ",".join(args.nPCA.split())
@@ -603,30 +624,31 @@ def get_fname(args, old=False):
         fname += args.append
     if args.nPCA:
         fname += f"_nPCA{pca}"
-    if not old:
+    if not args.old:
         fname += f"_freqs{fqs}"
     return fname
 
 
-def get_lname(args, plot, old=False):
+def get_lname(args, plot):
     """for saving likelihood results"""
-    lname = get_fname(args, old)
+    if args.old:
+        print("using old likelihood")
+    lname = get_fname(args)
     if args.appendLik:
-        lname += args.appendLik if old else f"like{args.appendLik}"
+        lname += args.appendLik if args.old else f"like{args.appendLik}"
 
     lname += f"_noisyT21{args.noisyT21}_vs{plot}_DAfactor{args.DA_factor}_freqFluctuationLevel{args.freqFluctuationLevel}"
-    if old:
+    if args.old:
         paths = lname.split("/")
         paths.insert(6, "corner")
         lname = "/".join(paths)
     return lname
 
 
-def get_samplesAndLikelihood(args, plot, verbose=False, old=False):
-    lname = get_lname(args, plot, old)
+def get_samplesAndLikelihood(args, plot, verbose=False):
+    lname = get_lname(args, plot)
     if verbose:
-        if verbose:
-            print(f"loading corner likelihood results from {lname}")
+        print(f"loading corner likelihood results from {lname}")
     f = np.loadtxt(lname, unpack=True)
     likelihood = f[-1]
     samples = f[:-1].T
@@ -689,6 +711,8 @@ class Args:
         appendLik="",
         fgFITS="ulsa.fits",
         freqs="1 51",
+        old=False,
+        llblowupfactor=1.0,
     ):
 
         self.sigma = sigma
@@ -716,9 +740,12 @@ class Args:
         self.appendLik = appendLik
         self.fgFITS = fgFITS
         self.freqs = freqs
+        self.old = old
+        self.llblowupfactor = llblowupfactor
 
     def prettyprint(self):
         print("Using the following args:")
         for arg in vars(self):
             val = str(getattr(self, arg))
             print(f"{arg:20s} {val:20s}")
+        print("--" * 40, "\n")

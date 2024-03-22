@@ -7,7 +7,7 @@ import NormalizingFlow as nf
 
 ##---------------------------------------------------------------------------##
 
-model = "GIS_ulsa_nside128_sigma2.0_galcut20.0_chromaticBeamFalse_combineSigma4_SNRpp1e+09_seed0_subsampleSigma2.0_gainFluctuation0.0_SVD_freqs1,51"
+model = "GIS_ulsa_nside128_sigma2.0_subsampleNone_galcut20.0_noPCAFalse_chromaticBeamFalse_combineSigma4,6_SNRpp1e+09_seed0_subsampleSigma2.0_gainFluctuation0.0_gFdebug0_SVD_freqs1,51"
 fg = "ulsa.fits"
 
 np.random.seed(0)
@@ -25,7 +25,7 @@ flow = nf.FlowAnalyzerV2(loadPath=model)
 
 args = nf.Args()
 args.SNRpp = 1e9
-args.combineSigma = "4"
+args.combineSigma = "4 6"
 args.prettyprint()
 
 flow.set_fg(args)
