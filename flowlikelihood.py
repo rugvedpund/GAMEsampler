@@ -36,13 +36,13 @@ t21 = lusee.MonoSkyModels.T_DarkAges_Scaled(
 )
 flow.set_t21(t21)
 
-def likelihood(arr):
+def likelihood(arr,priorlow=[0.01, 1, 1], priorhigh=[10, 40, 40]):
     try:
         assert arr.shape[1] == 3  # =50*2 nfreqs bins for 2+4 model
     except AssertionError:
         print("likelihood query must be of shape (npoints,nfreqs)")
 
-    return flow.get_likelihoodFromSamplesGAME(arr)
+    return flow.get_likelihoodFromSamplesGAME(arr,priorlow=priorlow,priorhigh=priorhigh)
 
 if __name__ == "__main__":
     arr = np.array([[1.0, 14.0, 16.4]])
